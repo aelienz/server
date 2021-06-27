@@ -27,6 +27,8 @@ export default class GameServer {
 			console.log(`Server started at http://localhost:${GameServer.PORT} !`);
 		});
 
+		this.app.use("/", (_, res) => res.send("Hello World!"));
+
 		this.io.on("connection", (socket) => {
 			console.log("A user has connected!");
 
