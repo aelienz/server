@@ -1,10 +1,11 @@
 import cors from "cors";
+import "dotenv-safe/config";
 import express, { Express } from "express";
 import { createServer, Server as HttpServer } from "http";
 import { Server as SocketServer } from "socket.io";
 
 export default class GameServer {
-	public static readonly PORT = 4000;
+	public static readonly PORT = process.env.PORT || 3000;
 	private app: Express;
 	private server: HttpServer;
 	private io: SocketServer;
