@@ -30,14 +30,14 @@ export default class GameServer {
 		this.app.use("/", (_, res) => res.send("Hello World!"));
 
 		this.io.on("connection", (socket) => {
-			console.log("A user has connected!");
+			console.log("User connected!");
 
-			socket.on("add", ({ num1, num2 }) => {
-				this.io.emit("result", num1 + num2);
+			socket.on("message-create", ({ content }) => {
+				this.io.emit("message-receive", { content });
 			});
 
 			socket.on("disconnect", () => {
-				console.log("A user has disconnected");
+				console.log("User disconnected");
 			});
 		});
 	}
