@@ -7,6 +7,7 @@ import { GameState, Player } from "./lib/types";
 
 export default class GameServer {
 	public static readonly PORT = process.env.PORT || 3000;
+	public static readonly HEARTBEAT = 20;
 	private app: Express;
 	private server: HttpServer;
 	private io: SocketServer;
@@ -37,19 +38,47 @@ export default class GameServer {
 
 		this.io.sockets.on("connection", (socket) => {
 			socket.on("player-join", (player: Player) => {
-				this.state.players.push(player);
-
-				this.io.emit("add-player", player);
-				this.io.to(player.socket.id).emit("load-players", this.state.players);
+				this.state.players.push({
+					player,
+					transform: { x: 0, y: 0, rotation: 0 }
+				});
 			});
+
+			socket.on(
+				"player-move",
+				({
+					player,
+					vel
+				}: {
+					player: Player;
+					vel: { x: number; y: number };
+				}) => {
+					const transform =
+						this.state.players[
+							this.state.players.indexOf(
+								this.state.players.find(
+									(data) => data.player.socket.id === player.socket.id
+								)
+							)
+						].transform;
+
+					transform.x += vel.x;
+					transform.y += vel.y;
+				}
+			);
 
 			socket.on("disconnect", () => {
 				this.state.players = this.state.players.filter(
-					(player) => player.socket.id !== socket.id
+					(data) => data.player.socket.id !== socket.id
 				);
-				this.io.emit("remove-player", socket.id);
 			});
 		});
+
+		setInterval(() => this.update(), GameServer.HEARTBEAT);
+	}
+
+	private update() {
+		this.io.emit("heartbeat", this.state);
 	}
 
 	public getApp() {
