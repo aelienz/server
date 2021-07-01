@@ -3,12 +3,14 @@ import "dotenv-safe/config";
 import express, { Express } from "express";
 import { createServer, Server as HttpServer } from "http";
 import { Server as SocketServer } from "socket.io";
+import { GameState, Player } from "./lib/types";
 
 export default class GameServer {
 	public static readonly PORT = process.env.PORT || 3000;
 	private app: Express;
 	private server: HttpServer;
 	private io: SocketServer;
+	private state: GameState;
 
 	public constructor() {
 		this.init();
@@ -20,6 +22,10 @@ export default class GameServer {
 		this.app.use(cors());
 		this.server = createServer(this.app);
 		this.io = new SocketServer(this.server);
+
+		this.state = {
+			players: []
+		};
 	}
 
 	private listen() {
@@ -30,16 +36,18 @@ export default class GameServer {
 		this.app.use("/", (_, res) => res.send("Hello World!"));
 
 		this.io.sockets.on("connection", (socket) => {
-			console.log("User connected!");
+			socket.on("player-join", (player: Player) => {
+				this.state.players.push(player);
 
-			socket.on("message-create", ({ content }) => {
-				this.io.emit("message-receive", {
-					content: `${socket.id}: ${content}`
-				});
+				this.io.emit("add-player", player);
+				this.io.to(player.socket.id).emit("load-players", this.state.players);
 			});
 
 			socket.on("disconnect", () => {
-				console.log("User disconnected");
+				this.state.players = this.state.players.filter(
+					(player) => player.socket.id !== socket.id
+				);
+				this.io.emit("remove-player", socket.id);
 			});
 		});
 	}
