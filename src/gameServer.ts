@@ -53,17 +53,19 @@ export default class GameServer {
 					player: Player;
 					vel: { x: number; y: number };
 				}) => {
-					const transform =
-						this.state.players[
-							this.state.players.indexOf(
-								this.state.players.find(
-									(data) => data.player.socket.id === player.socket.id
+					try {
+						const transform =
+							this.state.players[
+								this.state.players.indexOf(
+									this.state.players.find(
+										(data) => data.player.socket.id === player.socket.id
+									)
 								)
-							)
-						].transform;
+							].transform;
 
-					transform.x += vel.x;
-					transform.y += vel.y;
+						transform.x += vel.x;
+						transform.y += vel.y;
+					} catch (_) {}
 				}
 			);
 
