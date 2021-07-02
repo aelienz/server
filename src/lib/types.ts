@@ -1,21 +1,21 @@
-export interface Player {
-	socket: {
-		id: string;
-	};
-	name: string;
-}
-
 export interface Transform {
 	x: number;
 	y: number;
 	rotation: number;
 }
 
-export interface PlayerData {
+export interface Player {
+	name: string;
+}
+
+export interface Client {
+	socket: {
+		id: string;
+	};
 	player: Player;
 	transform: Transform;
 }
 
-export interface GameState {
-	players: PlayerData[];
+export interface State {
+	clients: Client[];
 }

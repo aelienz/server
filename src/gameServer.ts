@@ -3,7 +3,7 @@ import "dotenv-safe/config";
 import express, { Express } from "express";
 import { createServer, Server as HttpServer } from "http";
 import { Server as SocketServer } from "socket.io";
-import { GameState, Player } from "./lib/types";
+import { Client, State } from "./lib/types";
 
 export default class GameServer {
 	public static readonly PORT = process.env.PORT || 3000;
@@ -11,7 +11,7 @@ export default class GameServer {
 	private app: Express;
 	private server: HttpServer;
 	private io: SocketServer;
-	private state: GameState;
+	private state: State;
 
 	public constructor() {
 		this.init();
@@ -25,7 +25,7 @@ export default class GameServer {
 		this.io = new SocketServer(this.server);
 
 		this.state = {
-			players: []
+			clients: []
 		};
 	}
 
@@ -37,41 +37,34 @@ export default class GameServer {
 		this.app.use("/", (_, res) => res.send("Hello World!"));
 
 		this.io.sockets.on("connection", (socket) => {
-			socket.on("player-join", (player: Player) => {
-				this.state.players.push({
-					player,
-					transform: { x: 0, y: 0, rotation: 0 }
-				});
+			socket.on("client-join", (client: Client) => {
+				this.state.clients.push(client);
 			});
 
 			socket.on(
 				"player-move",
 				({
-					player,
+					socket,
 					vel
 				}: {
-					player: Player;
+					socket: { id: string };
 					vel: { x: number; y: number };
 				}) => {
-					try {
-						const transform =
-							this.state.players[
-								this.state.players.indexOf(
-									this.state.players.find(
-										(data) => data.player.socket.id === player.socket.id
-									)
-								)
-							].transform;
+					const transform =
+						this.state.clients[
+							this.state.clients.findIndex(
+								(client) => client.socket.id === socket.id
+							)
+						].transform;
 
-						transform.x += vel.x;
-						transform.y += vel.y;
-					} catch (_) {}
+					transform.x += vel.x;
+					transform.y += vel.y;
 				}
 			);
 
 			socket.on("disconnect", () => {
-				this.state.players = this.state.players.filter(
-					(data) => data.player.socket.id !== socket.id
+				this.state.clients = this.state.clients.filter(
+					(client) => client.socket.id !== socket.id
 				);
 			});
 		});
@@ -80,10 +73,6 @@ export default class GameServer {
 	}
 
 	private update() {
-		this.io.emit("heartbeat", this.state);
-	}
-
-	public getApp() {
-		return this.app;
+		this.io.emit("heartbeat", JSON.stringify(this.state));
 	}
 }
