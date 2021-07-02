@@ -7,7 +7,7 @@ import { Client, State } from "./lib/types";
 
 export default class GameServer {
 	public static readonly PORT = process.env.PORT || 3000;
-	public static readonly HEARTBEAT = 30;
+	public static readonly HEARTBEAT = 20;
 	private app: Express;
 	private server: HttpServer;
 	private io: SocketServer;
