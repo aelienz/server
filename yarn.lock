@@ -104,6 +104,11 @@ accepts@~1.3.4, accepts@~1.3.7:
     mime-types "~2.1.24"
     negotiator "0.6.2"
 
+aelienz-types@^1.0.16:
+  version "1.0.16"
+  resolved "https://registry.yarnpkg.com/aelienz-types/-/aelienz-types-1.0.16.tgz#dc8fc84797ada2499b6821088dd7b03257f69c89"
+  integrity sha512-Gk8K5sYwRqZ777ro4EnR9W8DPrZAocuE+QLpNQL6SJ6Lrxf87Yqkw/U4nMSZvQdatRnl0KJ+Ru7ZggXcEtAWFw==
+
 ansi-align@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/ansi-align/-/ansi-align-3.0.0.tgz#b536b371cf687caaef236c18d3e21fe3797467cb"

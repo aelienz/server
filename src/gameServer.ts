@@ -1,9 +1,9 @@
+import { GameState, Player, PlayerEntity, Transform } from "aelienz-types";
 import cors from "cors";
 import "dotenv-safe/config";
 import express, { Express } from "express";
 import { createServer, Server as HttpServer } from "http";
 import { Server as SocketServer } from "socket.io";
-import { Client, State } from "./lib/types";
 
 export default class GameServer {
 	public static readonly PORT = process.env.PORT || 3000;
@@ -11,7 +11,7 @@ export default class GameServer {
 	private app: Express;
 	private server: HttpServer;
 	private io: SocketServer;
-	private state: State;
+	private state: GameState;
 
 	public constructor() {
 		this.init();
@@ -25,7 +25,7 @@ export default class GameServer {
 		this.io = new SocketServer(this.server);
 
 		this.state = {
-			clients: []
+			entities: []
 		};
 	}
 
@@ -37,34 +37,48 @@ export default class GameServer {
 		this.app.use("/", (_, res) => res.send("Hello World!"));
 
 		this.io.sockets.on("connection", (socket) => {
-			socket.on("client-join", (client: Client) => {
-				this.state.clients.push(client);
-			});
-
 			socket.on(
-				"player-move",
+				"player-join",
 				({
-					socket,
-					vel
+					player,
+					transform,
+					image
 				}: {
-					socket: { id: string };
-					vel: { x: number; y: number };
+					player: Player;
+					transform: Transform;
+					image: string;
 				}) => {
-					const transform =
-						this.state.clients[
-							this.state.clients.findIndex(
-								(client) => client.socket.id === socket.id
-							)
-						].transform;
-
-					transform.x += vel.x;
-					transform.y += vel.y;
+					this.state.entities.push(
+						new PlayerEntity({
+							socket: { id: socket.id },
+							player,
+							transform,
+							image
+						})
+					);
 				}
 			);
 
+			socket.on("player-move", ({ x, y }: { x: number; y: number }) => {
+				try {
+					const transform =
+						this.state.entities[
+							this.state.entities.findIndex(
+								(entity) =>
+									entity instanceof PlayerEntity &&
+									entity.socket.id === socket.id
+							)
+						].transform;
+
+					transform.x += x;
+					transform.y += y;
+				} catch (_) {}
+			});
+
 			socket.on("disconnect", () => {
-				this.state.clients = this.state.clients.filter(
-					(client) => client.socket.id !== socket.id
+				this.state.entities = this.state.entities.filter(
+					(entity) =>
+						entity instanceof PlayerEntity && entity.socket.id !== socket.id
 				);
 			});
 		});
