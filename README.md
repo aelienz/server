@@ -1,3 +1,3 @@
 # Server
 
-Aelienz server
+Aelienz.io server
