@@ -1,4 +1,4 @@
-import { GameState, Player, PlayerEntity, Transform } from "aelienz-types";
+import { GameState, Player, Transform } from "aelienz-types";
 import cors from "cors";
 import "dotenv-safe/config";
 import express, { Express } from "express";
@@ -48,14 +48,12 @@ export default class GameServer {
 					transform: Transform;
 					image: string;
 				}) => {
-					this.state.entities.push(
-						new PlayerEntity({
-							socket: { id: socket.id },
-							player,
-							transform,
-							image
-						})
-					);
+					this.state.entities.push({
+						socket: { id: socket.id },
+						player,
+						transform,
+						image
+					});
 				}
 			);
 
@@ -64,9 +62,7 @@ export default class GameServer {
 					const transform =
 						this.state.entities[
 							this.state.entities.findIndex(
-								(entity) =>
-									entity instanceof PlayerEntity &&
-									entity.socket.id === socket.id
+								(entity) => "player" in entity && entity.socket.id === socket.id
 							)
 						].transform;
 
@@ -77,8 +73,7 @@ export default class GameServer {
 
 			socket.on("disconnect", () => {
 				this.state.entities = this.state.entities.filter(
-					(entity) =>
-						entity instanceof PlayerEntity && entity.socket.id !== socket.id
+					(entity) => "player" in entity && entity.socket.id !== socket.id
 				);
 			});
 		});
